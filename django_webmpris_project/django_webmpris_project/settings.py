@@ -1,4 +1,7 @@
 # Django settings for django_webmpris_project project.
+import os
+
+PROJECT_PATH = os.getcwd()
 
 DEBUG = True
 TEMPLATE_DEBUG = DEBUG
@@ -11,8 +14,8 @@ MANAGERS = ADMINS
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.', # Add 'postgresql_psycopg2', 'mysql', 'sqlite3' or 'oracle'.
-        'NAME': '',                      # Or path to database file if using sqlite3.
+        'ENGINE': 'django.db.backends.sqlite3', # Add 'postgresql_psycopg2', 'mysql', 'sqlite3' or 'oracle'.
+        'NAME': os.path.join(PROJECT_PATH, 'mprisremote.db'),                      # Or path to database file if using sqlite3.
         # The following settings are not used with sqlite3:
         'USER': '',
         'PASSWORD': '',
@@ -67,8 +70,10 @@ STATIC_ROOT = ''
 # Example: "http://example.com/static/", "http://static.example.com/"
 STATIC_URL = '/static/'
 
+STATIC_PATH = os.path.join(PROJECT_PATH, 'static')
 # Additional locations of static files
 STATICFILES_DIRS = (
+    STATIC_PATH,
     # Put strings here, like "/home/html/static" or "C:/www/django/static".
     # Always use forward slashes, even on Windows.
     # Don't forget to use absolute paths, not relative paths.
@@ -107,7 +112,9 @@ ROOT_URLCONF = 'django_webmpris_project.urls'
 # Python dotted path to the WSGI application used by Django's runserver.
 WSGI_APPLICATION = 'django_webmpris_project.wsgi.application'
 
+TEMPLATE_PATH = os.path.join(PROJECT_PATH, 'templates')
 TEMPLATE_DIRS = (
+    TEMPLATE_PATH,
     # Put strings here, like "/home/html/django_templates" or "C:/www/django/templates".
     # Always use forward slashes, even on Windows.
     # Don't forget to use absolute paths, not relative paths.
@@ -120,6 +127,8 @@ INSTALLED_APPS = (
     'django.contrib.sites',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'webmpris',
+    'mprisremote',
     # Uncomment the next line to enable the admin:
     # 'django.contrib.admin',
     # Uncomment the next line to enable admin documentation:
