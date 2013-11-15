@@ -1,136 +1,260 @@
-/**
- *
- * HTML5 Audio player with playlist
- *
- * Licensed under the MIT license.
- * http://www.opensource.org/licenses/mit-license.php
- * 
- * Copyright 2012, Script Tutorials
- * http://www.script-tutorials.com/
- */
-jQuery(document).ready(function() {
+window.players = {};
 
-    // inner variables
-    var song;
-    var tracker = $('.tracker');
-    var volume = $('.volume');
+checkPlayers = function() {
+    _ajax("/webmpris/api/players", {}, "GET", initPlayers);
+    setTimeout(checkPlayers, 5000);
+}
 
-    function initAudio(elem) {
-        var url = elem.attr('audiourl');
-        var title = elem.text();
-        var cover = elem.attr('cover');
-        var artist = elem.attr('artist');
+function _ajax(url, data, method, success, error) {
+    if (method == "PUT" || method == "POST") {
+        data = JSON.stringify(data);
+    }
+    $.ajax({
+        url: url,
+        cache: false,
+        dataType: 'json',
+        data: data || {},
+        type: method || "GET",
+        success: success || function(data, status, response) {
+            // alert(data);
+            ;
+        },
+        error: error || function(request, status, error) {
+            alert(status + ", " + error);
+        },
+    })
+}
 
-        $('.player .title').text(title);
-        $('.player .artist').text(artist);
-        $('.player .cover').css('background-image','url(data/' + cover+')');;
 
-        song = new Audio('data/' + url);
+initPlayers = function(players) {
+    for (var i = 0; i < players.length; i++) {
+        if (players[i] in window.players) {
+            ;
+        }
+        else {
+            window.players[players[i]] = MPRISPlayer(players[i]);
+        }
+    }
+}
 
-        // timeupdate event listener
-        song.addEventListener('timeupdate',function (){
-            var curtime = parseInt(song.currentTime, 10);
-            tracker.slider('value', curtime);
+
+MPRISPlayer = function(playerID) {
+    var playerID = playerID;
+    var webmprisAPI = "/webmpris/api/players/" + playerID;
+    var pid = '[pid="' + playerID + '"]';
+    var props;     // properties
+    var tracker;  // tracker slider
+    var volume;   // volume slider
+    var timeHdl;  // setTimeout result
+
+
+    function _ajax(url, data, method, success, error) {
+        if (method == "PUT" || method == "POST") {
+            data = JSON.stringify(data);
+        }
+        $.ajax({
+            url: url,
+            cache: false,
+            dataType: 'json',
+            data: data || {},
+            type: method || "GET",
+            success: success || function(data, status, response) {
+                // alert(data);
+                ;
+            },
+            error: error || function(request, status, error) {
+                // alert(status + ", " + error);
+                if (request.status == 404) {
+                    suicide();
+                }
+            },
+        })
+    }
+
+    function suicide() {
+        clearTimeout(timeHdl);
+        $(pid).parent().remove();
+    }
+
+    function CreatePlayer() {
+        $('#player-template > div').clone().appendTo("#main").find('.media').attr("pid", playerID);
+        initSliders();
+        InitPlayer();
+    }
+
+    function InitPlayer() {
+        // play click
+        $(pid).find('.play').click(function(e) {
+            e.preventDefault();
+            play();
         });
 
-        $('.playlist li').removeClass('active');
-        elem.addClass('active');
+        // pause click
+        $(pid).find('.pause').click(function(e) {
+            e.preventDefault();
+            pause();
+        });
+
+        // forward click
+        $(pid).find('.fwd').click(function(e) {
+            e.preventDefault();
+            next();
+        });
+
+        // rewind click
+        $(pid).find('.rew').click(function(e) {
+            e.preventDefault();
+            previous();
+        });
+
+        // show playlist
+        $(pid).find('.pl').click(function(e) {
+            e.preventDefault();
+
+            $(pid).find('.playlist').fadeIn(300);
+        });
+        // refresh();
+        _setTimeout();
     }
-    function playAudio() {
-        song.play();
 
-        tracker.slider("option", "max", song.duration);
-
-        $('.play').addClass('hidden');
-        $('.pause').addClass('visible');
-    }
-    function stopAudio() {
-        song.pause();
-
-        $('.play').removeClass('hidden');
-        $('.pause').removeClass('visible');
-    }
-
-    // play click
-    $('.play').click(function (e) {
-        e.preventDefault();
-
-        playAudio();
-    });
-
-    // pause click
-    $('.pause').click(function (e) {
-        e.preventDefault();
-
-        stopAudio();
-    });
-
-    // forward click
-    $('.fwd').click(function (e) {
-        e.preventDefault();
-
-        stopAudio();
-
-        var next = $('.playlist li.active').next();
-        if (next.length == 0) {
-            next = $('.playlist li:first-child');
+    function UpdatePlayer(obj) {
+        props = {
+            'Next': obj.CanGoNext,
+            'Prev': obj.CanGoPrevious,
+            'Play': obj.CanPlay,
+            'Pause': obj.CanPause,
+            'Volume': obj.Volume,
+            'Position': obj.Position,
+            'PlaybackStatus': obj.PlaybackStatus,
+            'Cover': 'mpris:artUrl' in obj.Metadata ? obj.Metadata['mpris:artUrl'] : '',
+            'Length': 'mpris:length' in obj.Metadata ? obj.Metadata['mpris:length'] : 0,
+            'TrackId': 'mpris:trackid' in obj.Metadata ? obj.Metadata['mpris:trackid'] : '',
+            'Artists': 'xesam:artist' in obj.Metadata ? obj.Metadata['xesam:artist'].join(", ") : '',
+            'Title': 'xesam:title' in obj.Metadata ? obj.Metadata['xesam:title'] : ''
         }
-        initAudio(next);
-    });
 
-    // rewind click
-    $('.rew').click(function (e) {
-        e.preventDefault();
+        $(pid).find('.player .title').text(props.Title);
+        $(pid).find('.player .artist').text(props.Artists);
+        volume.slider("option", "max", 100);
+        volume.slider("value", props.Volume * 100);
+        tracker.slider("option", "max", props.Length);
+        tracker.slider("value", props.Position);
 
-        stopAudio();
-
-        var prev = $('.playlist li.active').prev();
-        if (prev.length == 0) {
-            prev = $('.playlist li:last-child');
+        if (props.PlaybackStatus == "Playing" && $(pid).find('.pause:hidden').length > 0) {
+            $(pid).find('.play').removeClass('visible').addClass('hidden');
+            $(pid).find('.pause').removeClass('hidden').addClass('visible');
         }
-        initAudio(prev);
-    });
+        if (props.PlaybackStatus != "Playing" && $(pid).find('.play:hidden').length > 0) {
+            $(pid).find('.play').removeClass('hidden').addClass('visible');
+            $(pid).find('.pause').removeClass('visible').addClass('hidden');
+        }
 
-    // show playlist
-    $('.pl').click(function (e) {
-        e.preventDefault();
+    }
 
-        $('.playlist').fadeIn(300);
-    });
 
-    // playlist elements - click
-    $('.playlist li').click(function () {
-        stopAudio();
-        initAudio($(this));
-    });
+    function play(success, error) {
+        var success = function(data) {
+            $(pid).find('.play').addClass('hidden').removeClass('visible');
+            $(pid).find('.pause').addClass('visible').removeClass('hidden');
+        }
+        _ajax(webmprisAPI + "/Player/Play", {}, "POST", success, error);
+    }
 
-    // initialization - first element in playlist
-    initAudio($('.playlist li:first-child'));
+    function stop(success, error) {
+        var success = function(data) {
+            $(pid).find('.play').removeClass('hidden').removeClass('visible');
+            $(pid).find('.pause').removeClass('visible').removeClass('hidden');
+        }
+        _ajax(webmprisAPI + "/Player/Stop", {}, "POST", success, error);
+    }
 
-    // set volume
-    song.volume = 0.8;
+    function pause(success, error) {
+        var success = function(data) {
+            $(pid).find('.play').removeClass('hidden').removeClass('visible');
+            $(pid).find('.pause').removeClass('visible').removeClass('hidden');
+        }
+        _ajax(webmprisAPI + "/Player/Pause", {}, "POST", success, error);
+    }
 
-    // initialize the volume slider
-    volume.slider({
-        range: 'min',
-        min: 1,
-        max: 100,
-        value: 80,
-        start: function(event,ui) {},
-        slide: function(event, ui) {
-            song.volume = ui.value / 100;
-        },
-        stop: function(event,ui) {},
-    });
+    function next(success, error) {
+        _ajax(webmprisAPI + "/Player/Next", {}, "POST", success, error);
+    }
 
-    // empty tracker slider
-    tracker.slider({
-        range: 'min',
-        min: 0, max: 10,
-        start: function(event,ui) {},
-        slide: function(event, ui) {
-            song.currentTime = ui.value;
-        },
-        stop: function(event,ui) {}
-    });
+    function previous(success, error) {
+        _ajax(webmprisAPI + "/Player/Previous", {}, "POST", success, error);
+    }
+
+    function volume_(value, success, error) {
+        if (value == undefined || value == null) {
+            return volume.slider("value");
+        } else {
+            setProperties({
+                "Volume": value
+            });
+        }
+    }
+
+    function setProperties(data, success, error) {
+        _ajax(webmprisAPI + "/Player", data, "PUT", success, error);
+    }
+
+    function position(value, success, error) {
+        if (value == undefined) {
+            return tracker.slider("value");
+        } else {
+            _ajax(webmprisAPI + "/Player/SetPosition", {
+                "args": [props.TrackId, value]
+            }, "POST", success, error);
+        }
+    }
+
+    function refresh() {
+        var success = function(data) {
+            _setTimeout();
+            UpdatePlayer(data);
+        }
+        _ajax(webmprisAPI + "/Player", {}, "GET", success);
+    }
+
+    function _setTimeout() {
+        timeHdl = setTimeout(refresh, 5000);
+    }
+
+    function initSliders() {
+        tracker = $(pid).find('.tracker');
+        volume = $(pid).find('.volume');
+
+        // volume slider
+        volume.slider({
+            range: 'min',
+            min: 1,
+            max: 100,
+            value: 80,
+            start: function(event, ui) {},
+            slide: function(event, ui) {},
+            stop: function(event, ui) {
+                volume_(ui.value / 100);
+            },
+        });
+
+        // tracker slider
+        tracker.slider({
+            range: 'min',
+            min: 0,
+            max: 100,
+            value: 10,
+            start: function(event, ui) {},
+            slide: function(event, ui) {},
+            stop: function(event, ui) {
+                position(ui.value);
+            }
+        });
+    }
+    
+
+    // InitPlayer();
+    CreatePlayer();
+}
+jQuery(document).ready(function() {
+    checkPlayers();
 });
