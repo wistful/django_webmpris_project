@@ -1,8 +1,11 @@
 window.players = {};
 
 checkPlayers = function() {
-    _ajax("/webmpris/api/players", {}, "GET", initPlayers);
-    setTimeout(checkPlayers, 5000);
+    var success = function(data) {
+        initPlayers(data);
+        setTimeout(checkPlayers, 5000);
+    }
+    _ajax("/webmpris/api/players", {}, "GET", success);
 }
 
 function _ajax(url, data, method, success, error) {
