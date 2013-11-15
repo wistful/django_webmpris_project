@@ -46,6 +46,7 @@ MPRISPlayer = function(playerID) {
     var tracker;  // tracker slider
     var volume;   // volume slider
     var timeHdl;  // setTimeout result
+    var trackID; // now playing track
 
 
     function _ajax(url, data, method, success, error) {
@@ -118,7 +119,35 @@ MPRISPlayer = function(playerID) {
     }
 
     function UpdatePlayer(obj) {
-        props = {
+
+        function updateLabels(data) {
+            $(pid).find('.player .title').text(data.Title);
+            $(pid).find('.player .artist').text(data.Artists);
+            if (data.Cover) {
+                var coverUrl = '/player/cover?path=' + encodeURIComponent(data.Cover);
+                $(pid).find('.player .cover img').attr("src", coverUrl);
+            }
+        }
+
+        function updateSlides(data) {
+            volume.slider("option", "max", 100);
+            volume.slider("value", data.Volume * 100);
+            tracker.slider("option", "max", data.Length);
+            tracker.slider("value", data.Position);
+        }
+
+        function updateControls(data) {
+            if (data.PlaybackStatus == "Playing" && $(pid).find('.pause:hidden').length > 0) {
+                $(pid).find('.play').removeClass('visible').addClass('hidden');
+                $(pid).find('.pause').removeClass('hidden').addClass('visible');
+            }
+            if (data.PlaybackStatus != "Playing" && $(pid).find('.play:hidden').length > 0) {
+                $(pid).find('.play').removeClass('hidden').addClass('visible');
+                $(pid).find('.pause').removeClass('visible').addClass('hidden');
+            }
+        }
+
+        var _props = {
             'Next': obj.CanGoNext,
             'Prev': obj.CanGoPrevious,
             'Play': obj.CanPlay,
@@ -129,25 +158,21 @@ MPRISPlayer = function(playerID) {
             'Cover': 'mpris:artUrl' in obj.Metadata ? obj.Metadata['mpris:artUrl'] : '',
             'Length': 'mpris:length' in obj.Metadata ? obj.Metadata['mpris:length'] : 0,
             'TrackId': 'mpris:trackid' in obj.Metadata ? obj.Metadata['mpris:trackid'] : '',
-            'Artists': 'xesam:artist' in obj.Metadata ? obj.Metadata['xesam:artist'].join(", ") : '',
-            'Title': 'xesam:title' in obj.Metadata ? obj.Metadata['xesam:title'] : ''
+            'Artists': 'xesam:artist' in obj.Metadata ? obj.Metadata['xesam:artist'].join(", ") : 'Unknown Artist',
+            'Title': 'xesam:title' in obj.Metadata ? obj.Metadata['xesam:title'] : 'Unknown Title'
         }
 
-        $(pid).find('.player .title').text(props.Title);
-        $(pid).find('.player .artist').text(props.Artists);
-        volume.slider("option", "max", 100);
-        volume.slider("value", props.Volume * 100);
-        tracker.slider("option", "max", props.Length);
-        tracker.slider("value", props.Position);
+        if (!props || _props.TrackId != props.TrackId) {
+            updateLabels(_props || props);
+        }
 
-        if (props.PlaybackStatus == "Playing" && $(pid).find('.pause:hidden').length > 0) {
-            $(pid).find('.play').removeClass('visible').addClass('hidden');
-            $(pid).find('.pause').removeClass('hidden').addClass('visible');
+        if (!props || _props.Position != props.Position) {
+            updateSlides(_props || props);
         }
-        if (props.PlaybackStatus != "Playing" && $(pid).find('.play:hidden').length > 0) {
-            $(pid).find('.play').removeClass('hidden').addClass('visible');
-            $(pid).find('.pause').removeClass('visible').addClass('hidden');
-        }
+
+        props = _props;
+
+        updateControls(props)
 
     }
 
