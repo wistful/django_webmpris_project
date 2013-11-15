@@ -79,6 +79,8 @@ MPRISPlayer = function(playerID) {
 
     function CreatePlayer() {
         $('#player-template > div').clone().appendTo("#main").find('.media').attr("pid", playerID);
+        fn = function(data) {$(pid).find('label').text(data['Identity']);}
+        _ajax(webmprisAPI + "/Root", {}, "GET", fn);
         initSliders();
         InitPlayer();
     }
