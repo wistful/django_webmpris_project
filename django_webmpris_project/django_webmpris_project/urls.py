@@ -1,4 +1,5 @@
 from django.conf.urls import patterns, include, url
+from django.views.generic.base import RedirectView
 
 # Uncomment the next two lines to enable the admin:
 # from django.contrib import admin
@@ -6,6 +7,7 @@ from django.conf.urls import patterns, include, url
 
 urlpatterns = patterns(
     '',
+    url(r'^$', RedirectView.as_view(url='player'), name='go-to-player'),
     url(r'^player/', include('mprisremote.urls')),
     url(r'^webmpris/api/', include('webmpris.urls')),
 
