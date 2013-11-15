@@ -1,0 +1,26 @@
+{% load staticfiles %}
+<!doctype html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <!--  Bootstrap -->
+        <link rel="stylesheet" type="text/css" href="{% static "css/bootstrap.css" %}">
+        <link rel="stylesheet" type="text/css" href="{% static "css/bootstrap-theme.css" %}">
+        {% block styles_block %}{% endblock styles_block %}
+        <script type="text/javascript" src="{% static "js/jquery-1.10.2.min.js" %}"></script>
+        <script type="text/javascript" src="{% static "js/bootstrap.js" %}"></script>
+        <script type="text/javascript" src="{% static "js/jquery-ui-1.10.3.custom.min.js" %}"></script>
+        {% block scripts_block %}{% endblock scripts_block %}
+
+        <title>{% block title %}{% endblock title %}</title>
+    </head>
+    <body>
+        <header>
+            {% block header %}{% endblock header %}
+        </header>
+        {% block body_block %}
+            
+        {% endblock body_block %}
+    </body>
+</html>

@@ -1,0 +1,25 @@
+
+{% extends "mprisremote/base.html" %}
+{% load staticfiles %}
+{% block title %}
+    Control Media Players with MPRIS2 Interfaces
+{% endblock title %}
+
+{% block styles_block %}
+    <link href="{% static "css/player.css" %}" rel="stylesheet" type="text/css" />
+{% endblock styles_block %}
+
+{% block scripts_block %}
+    <script type="text/javascript" src="{% static "js/player.js" %}"></script>
+    <script type="text/javascript" src="{% static "js/mprisremote.js" %}"></script>
+{% endblock scripts_block %}
+<body>
+    {% block header %}
+        <h2>Control Media Players using MPRIS2 Interfaces</h2>
+    {% endblock header %}
+    {% block body_block %}
+        {% include "mprisremote/player.html" %}
+
+        <div id="main" class="container"></div>
+    {% endblock body_block %}
+</body>
