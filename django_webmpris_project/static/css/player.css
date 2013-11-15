@@ -64,6 +64,12 @@ header a, a:visited {
     font-size: 12px;
     top: 40px;
 }
+
+.artist, .title {
+    height: 20px;
+    overflow: hidden;
+    width: 150px;
+}
 .pl {
     background: transparent url("../img/player/spr.png") no-repeat scroll -274px -175px;
     cursor: pointer;
