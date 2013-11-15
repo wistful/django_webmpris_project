@@ -159,7 +159,7 @@ header a, a:visited {
     width: 10px;
     z-index: 2;
 }
-.volume .ui-slider-handle {
+.volume .ui-slider-handle, .tracker .ui-slider-handle {
     background: url("../img/player/spr.png") no-repeat scroll -201px -188px rgba(0, 0, 0, 0);
     height: 13px;
     width: 13px;
