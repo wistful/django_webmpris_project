@@ -126,7 +126,7 @@ def update():
     src_remote = os.path.join(prj, "src")
     rsync_project(local_dir=src_local,
                   remote_dir=src_remote,
-                  exclude=["static", "*.pyc"])
+                  exclude=["static/img/covers", "*.pyc"])
 
     upload_configs()
     nginx_ctl("reload")
