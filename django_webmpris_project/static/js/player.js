@@ -1,4 +1,5 @@
 MPRISPlayer = function(playerID) {
+    var updateInterval = 2300;
     var playerID = playerID;
     var webmprisAPI = "/webmpris/api/players/" + playerID;
     var pid = '[pid="' + playerID + '"]';
@@ -204,7 +205,7 @@ MPRISPlayer = function(playerID) {
     }
 
     function _setTimeout() {
-        timeHdl = setTimeout(refresh, 5000);
+        timeHdl = setTimeout(refresh, updateInterval);
     }
 
     function initSliders() {
